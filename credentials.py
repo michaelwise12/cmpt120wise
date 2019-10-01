@@ -22,6 +22,7 @@ def password():
         passwd = input("Create a new password: ")
         if len(passwd) >= 8:
             break
+    return passwd
 
 def main():
     getName()
