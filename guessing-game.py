@@ -11,7 +11,7 @@ def main():
         if guess == "zebra":
             print("You guessed correctly!")
             break
-        
+            
         else:
             print("That is incorrect! Try again!")
             print()
