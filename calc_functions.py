@@ -5,10 +5,13 @@
 
 import math
 
+# JA: You should move the calculator function to the calculator.py file
 def calculator():
     equation = input("Enter an equation using (+,-,*,/)")
     eqlist = equation.split(" ")  # splits the string into a list
+    print(solve(eqlist))
 
+def solve(eqlist):
     while len(eqlist) > 1:
 
         for i in range(1, len(eqlist), 2):   # ensures that it only checks for operators
@@ -46,7 +49,7 @@ def calculator():
             else:
                 print("There was an error in your expression.")
 
-    print(eqlist[0])
+    return eqlist[0]
     
 calculator()
     
