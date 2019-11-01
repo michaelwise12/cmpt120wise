@@ -6,10 +6,6 @@
 import math
 
 # JA: You should move the calculator function to the calculator.py file
-def calculator():
-    equation = input("Enter an equation using (+,-,*,/)")
-    eqlist = equation.split(" ")  # splits the string into a list
-    print(solve(eqlist))
 
 def solve(eqlist):
     while len(eqlist) > 1:
@@ -50,6 +46,5 @@ def solve(eqlist):
                 print("There was an error in your expression.")
 
     return eqlist[0]
-    
-calculator()
+
     
