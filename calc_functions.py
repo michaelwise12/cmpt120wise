@@ -1,11 +1,9 @@
 # calc_functions.py
 # CMPT 120: Calculator Project
 # Author: Michael Wise
-# v0.1
+# v0.2
 
 import math
-
-# JA: You should move the calculator function to the calculator.py file
 
 def solve(eqlist):
     while len(eqlist) > 1:
@@ -45,6 +43,5 @@ def solve(eqlist):
             else:
                 print("There was an error in your expression.")
 
-    return eqlist[0]
-
-    
+    answer = eqlist[0]
+    return answer
