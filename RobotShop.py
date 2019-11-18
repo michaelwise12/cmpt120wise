@@ -2,6 +2,8 @@
 # Author: Michael Wise
 # CMPT 120: Lab #8 - Working with Objects
 
+# JA: Always remember to add comments to your code
+
 class Product:
     
     def __init__(self, name, price, quantity):
