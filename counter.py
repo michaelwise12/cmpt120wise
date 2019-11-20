@@ -13,4 +13,10 @@ class Counter:
     def get_value(self):
         return self.count
 
+class DecrementingCounter2(Counter):
+    """Simple counter that can be incremented, decremented, and cleared."""
+    def decrement(self):
+        """Decrement counter by 1."""
+        self.count -= 1
+
 
