@@ -1,138 +1,185 @@
 # calculator.pyw
 # Author: Michael Wise
-# CMPT 120: Calculator Project #3
-
-# Next step is an object-oriented approach!!
+# CMPT 120: Calculator Project #4
 
 from graphics import *
 from calc_functions import *
 
-# Draws the window, display, and labels      
-def createDisplay(bList):
-    keys = createKeypad(bList)
-    
-    win = GraphWin("Calculator", 500, 600)
-    win.setBackground("gray25")
-    win.setCoords(0,0,4,7) # the book used these coords but I want to go back and make them nicer
-    display = Rectangle(Point(.25, 6.125),Point(3.75, 6.875))
-    display.setFill("white")
-    display.draw(win)
-    text = Text(Point(2,6.5), "0")
-    text.setSize(28)
-    text.draw(win)
-    memText = Text(Point(.5, 6.25),"")
-    memText.setSize(8)
-    memText.draw(win)
-    
-    drawKeys(keys, win)
-    return win, display, text, memText
+class Calculator:
+    """ Encloses all functionality of the calculator. """
+    def __init__(self):
+        self.win = GraphWin("Calculator", 500, 600)
+        self.win.setBackground("gray25")
+        self.win.setCoords(0,0,4,7)
+        self.keypad = Keypad(self.win)
+        self.display = Display(self.win)
+        self.engine = CalcFunctions(self.win)
 
-# Creates the buttons (alternative to listing them all out one by one)
-def createButton(values):
-    p1 = Point(values[0] + .1, values[1] + .1)
-    p2 = Point(values[0] + .9, values[1] + .9)
-    button = Rectangle(p1, p2)
-    button.setFill(values[3])
-    numtext = Text(Point(values[0] + .5, values[1] + .5), values[2])
-    numtext.setSize(34)
-    return button, numtext
+    def run(self):
+        while True:
+            click = self.win.getMouse()
+            buttonText = self.keypad.getInput(click)
+            print(buttonText)
+            result = self.engine.processInput(buttonText)
+            self.display.update(result)
+            if buttonText in ["M+", "M-", "MC", "MR"]:
+                self.display.updateMem("Mem: " + str(self.engine.memory))
+                self.display.update(result)
+            
+class Button:
+    def __init__(self, win, center, width, height, text, color):
+        """ Encloses all functionality for creating buttons. """
+        width = width/2
+        height = height/2
+        x = center.getX()
+        y = center.getY()
+        self.xmax, self.xmin = x + width, x - width
+        self.ymax, self.ymin = y + width, y - width
+        self.color = color
+        p1 = Point(self.xmin, self.ymin)
+        p2 = Point(self.xmax, self.ymax)
+        self.button = Rectangle(p1, p2)
+        self.button.setFill(color)
+        self.button.draw(win)
+        self.text = Text(center, text)
+        self.text.setSize(34)
+        self.text.draw(win)
+        self.state = True
 
-# Creates the full keypad
-def createKeypad(lst):
-    keys = []
-    for key in lst:
-        button, numtext = createButton(key)
-        keys.append([button, numtext])
-    return keys
-
-# Draws all the keys onto the window using a loop
-def drawKeys(keys, win):
-    for key in keys:
-        key[0].draw(win)
-        key[1].draw(win)
+    def turnOff(self):
+        self.state = False
+    def turnOn(self):
+        self.state = True
         
-# Gets user input, returns the button label and adds to main equation
-def getInput(click, bList):
-    x = click.getX()
-    y = click.getY()
-    if int(y) == 0 and int(x) == 0 or int(y) == 0 and int(x) == 1:
-        return "None"
-    elif int(y) == 6:
-        return "None"
-    for i in range(len(bList)):
-        if bList[i][1] == int(y): 
-            for j in range(i,len(bList)):
-                if bList[j][0] == int(x):
-                    if bList[j][2] in ['*','/','+','-']:
-                        return " " + bList[j][2] + " "
-                    else:
-                        return bList[j][2]
+    def getTextlabel(self):
+        return self.text.getText()
 
-def main():
-# List containing all the symbols on the calculator with their respective coordinates/colors
-# Used integers so it would be easier for getInput to know what button is pressed
-    bList = [[0, 1, "+/-", "OrangeRed1"],[1, 1, "0", "gray50"], [2, 1, ".", "gray50"],     [3, 1, "-", "OrangeRed1"],
-             [0, 2, "1", "gray50"],      [1, 2, "2", "gray50"], [2, 2, "3", "gray50"],     [3, 2, "+", "OrangeRed1"],
-             [0, 3, "4", "gray50"],      [1, 3, "5", "gray50"], [2, 3, "6", "gray50"],     [3, 3, "*", "OrangeRed1"],
-             [0, 4, "7", "gray50"],      [1, 4, "8", "gray50"], [2, 4, "9", "gray50"],     [3, 4, "/", "OrangeRed1"],
-             [0, 5, "M+", "red"  ],      [1, 5, "M-", "red"  ], [2, 5, "MR", "red"  ],     [3, 5, "MC", "red"  ],
-                                                                [2, 0,  "C", "OrangeRed1"],[3, 0,  "=", "red"]]
-    win, display, text, memText = createDisplay(bList)
+    def isClicked(self, p):
+        if self.xmin <= p.getX() <= self.xmax and self.ymin <= p.getY() <= self.ymax:
+            return True
+            
 
-    equation = ""
-    memory = 0
+class Display:
+    """ Encloses all functionality for rendering and updating the display. """
+    def __init__(self, win):
+        self.display = Rectangle(Point(.25, 6.125), Point(3.75, 6.875))
+        self.display.setFill("white")
+        self.display.draw(win)
+        self.text = Text(Point(2,6.5), "0")
+        self.text.setSize(28)
+        self.text.draw(win)
+        self.memText = Text(Point(.5, 6.25),("Mem: 0.0"))
+        self.memText.setSize(8)
+        self.memText.draw(win)
+        self.memory = 0.0
+    def update(self, result):
+    # Updates the text on the screen.
+        self.text.setText(result)
 
-# Loop that keeps checking for input
-    while True:
-        click = win.getMouse()
-        buttonText = getInput(click, bList)
-        print(buttonText)
+    def updateMem(self, result):
+    # Updates the memory text on the display.
+        self.memText.setText(result)
+
+class Keypad:
+    """Stores all the functionality for interacting with the keypad."""
+    def __init__(self, win):
+        self.win = win
+    # List of all the button objects (win, center, width, height, text, color)
+        self.bList =  [Button(win, Point(.5,  1.5),  .8, .8, "+/-", "OrangeRed1"),
+                       Button(win, Point(1.5, 1.5),  .8, .8, "0", "gray50"),
+                       Button(win, Point(2.5, 1.5),  .8, .8, ".", "gray50"),
+                       Button(win, Point(3.5, 1.5),  .8, .8, "-", "OrangeRed1"),
+                       Button(win, Point(.5, 2.5),  .8, .8, "1", "gray50"),
+                       Button(win, Point(1.5, 2.5), .8, .8, "2", "gray50"),
+                       Button(win, Point(2.5, 2.5), .8, .8, "3", "gray50"),
+                       Button(win, Point(3.5, 2.5), .8, .8, "+", "OrangeRed1"),
+                       Button(win, Point(.5, 3.5),  .8, .8, "4", "gray50"),
+                       Button(win, Point(1.5, 3.5), .8, .8, "5", "gray50"),
+                       Button(win, Point(2.5, 3.5), .8, .8, "6", "gray50"),
+                       Button(win, Point(3.5, 3.5), .8, .8, "*", "OrangeRed1"),
+                       Button(win, Point(.5,  4.5), .8, .8, "7", "gray50"),
+                       Button(win, Point(1.5, 4.5), .8, .8, "8", "gray50"),
+                       Button(win, Point(2.5, 4.5), .8, .8, "9", "gray50"),
+                       Button(win, Point(3.5, 4.5), .8, .8, "/", "OrangeRed1"),
+                       Button(win, Point(.5,  5.5), .75, .75, "M+", "red"),
+                       Button(win, Point(1.5, 5.5), .75, .75, "M-", "red"),
+                       Button(win, Point(2.5, 5.5), .75, .75, "MR", "red"),
+                       Button(win, Point(3.5, 5.5), .75, .75, "MC", "red"),
+                       Button(win, Point(2.5, .5),  .8, .8, "C", "OrangeRed1"),
+                       Button(win, Point(3.5, .5),  .8, .8,  "=", "red")]
         
-        if equation in ["Error", "0", "+", "-", "*", "/"]:
-            equation = ""
+    # Checks if button is clicked. If so, get the label of the button.
+    def getInput(self, p):
+        for button in self.bList:
+            if button.isClicked(p):
+                label = button.getTextlabel()
+                return label
+
+class CalcFunctions:
+    """ Class that processes the inputs and outputs the current equation. """
+    def __init__(self, win):
+        self.win = win
+        self.equation = ""
+        self.memory = 0.0
+    # Processes the input recieved and interprets it accordingly.
+    def processInput(self, buttonText):
+        if self.equation in ["Error", "0", "+", "-", "*", "/"]:
+            self.equation = ""
           
         try:
             # Solves equation (using solve() as defined in calc_functions.py)
             if buttonText == "=": 
-                result = solve(equation.split())
-                equation = str(result)
+                result = solve(self.equation.split())
+                self.equation = str(result)
+                return self.equation
+            elif buttonText in ["0","1","2","3","4","5","6","7","8","9"]:
+                self.equation = self.equation + buttonText
+                return self.equation
+            elif buttonText == ".":
+                self.equation = self.equation + "."
+                return self.equation
+            elif buttonText in ["*", "/", "+", "-"]:
+                self.equation = self.equation + " " + buttonText + " "
+                return self.equation
             # Changes last digit to opposite sign
             elif buttonText == "+/-":
-                lastDigit = float(equation.split()[-1])
+                lastDigit = float(self.equation.split()[-1])
                 lastDigit = lastDigit * -1
-                equation = " ".join(equation.split()[:-1]) + " " + str(lastDigit)
-            # Clear calculator (eventually want to add a button that deletes only one entry)
+                self.equation = " ".join(self.equation.split()[:-1]) + " " + str(lastDigit)
+                return self.equation
+            # Clear calculator
             elif buttonText == "C":
                 result = "0"
-                equation = str(result)
+                self.equation = str(result)
+                return self.equation
             # If clicking on a space with no button, does nothing (instead of saying error).
             elif buttonText == "None":
-                equation = equation
-                
+                self.equation = self.equation
+                return self.equation
             # Memory functions
             elif buttonText == "M+":
-                memory = memory + float(solve(equation.split()))
-                memText.setText("Mem: " + str(memory))
-                
+                self.memory = self.memory + float(solve(self.equation.split()))
+                return self.equation
+            
             elif buttonText == "M-":
-                memory = memory - float(solve(equation.split()))
-                memText.setText("Mem: " + str(memory))
-                
+                self.memory = self.memory - float(solve(self.equation.split()))
+                return self.equation
+            
             elif buttonText == "MR":
-                equation = equation + str(memory)
-                memText.setText("Mem: " + str(memory))
-                
+                self.equation = self.equation + str(self.memory)
+                return self.equation
+            
             elif buttonText == "MC":
-                memory = 0.0
-                memText.setText("Mem: " + str(memory))
+                self.memory = 0.0
                 
-            # Takes the equation string and concatenates it with the text of the button pressed.
-            else:
-                equation = equation + buttonText
         # Error message        
         except:
-            equation = "Error"
-              
-        text.setText(equation)
+            self.equation = ""
+            return "Error"
         
+def main():
+    # Runs the calculator
+    calculator = Calculator()
+    calculator.run()
+    
 main()
