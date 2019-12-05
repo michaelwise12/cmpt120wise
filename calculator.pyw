@@ -44,13 +44,7 @@ class Button:
         self.text = Text(center, text)
         self.text.setSize(34)
         self.text.draw(win)
-        self.state = True
 
-    def turnOff(self):
-        self.state = False
-    def turnOn(self):
-        self.state = True
-        
     def getTextlabel(self):
         return self.text.getText()
 
