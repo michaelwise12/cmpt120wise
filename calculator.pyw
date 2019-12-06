@@ -124,7 +124,10 @@ class CalcFunctions:
             # Solves equation (using solve() as defined in calc_functions.py)
             if buttonText == "=": 
                 result = solve(self.equation.split())
-                self.equation = str(result)
+                if result.is_integer():
+                    self.equation = str(int(result))
+                else:  
+                    self.equation = str(result)
                 return self.equation
             elif buttonText in ["0","1","2","3","4","5","6","7","8","9"]:
                 self.equation = self.equation + buttonText
